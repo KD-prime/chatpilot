@@ -170,6 +170,46 @@ llm = ChatGithub(model="openai/gpt-4.1", temperature=0.3)
 # single non-streaming prompt
 print("Assistant:", llm.invoke("Tell me a story"))
 
+
+
+
+
+
+
+@workspace
+In the repo folder: service/functions/Product/WebApp_Product_BackEnd
+
+Task:
+Create OR update a README.md in every direct subfolder (and nested subfolders if they contain code).
+If a README.md already exists, UPDATE it (do not delete useful content—improve/expand it).
+
+Each README should include:
+
+1) Purpose (plain English for a novice)
+2) Key files (list actual filenames found in that folder, especially .py — do not guess)
+3) How it runs (entrypoint, trigger type if applicable, and env vars referenced in code/config)
+4) High-Level Architecture Diagram (ASCII ONLY — NOT Mermaid)
+   - Put the diagram inside a Markdown code block (```).
+   - Use box-style ASCII with +---+ and |   | formatting (terminal-style diagram).
+   - Show arrows between components (--> or <-->).
+   - Label components with REAL .py filenames when relevant (only if they exist in that folder).
+   - Keep alignment clean and readable (monospace spacing).
+   - ASCII diagram style must match a “terminal architecture diagram” with large grouped boxes:
+     (Platform box at top, APIM big box containing Gateway Layer + downstream APIs,
+      Frontend + External APIs boxes on the left).
+
+5) Local dev + test steps (commands, how to run locally, how to validate it works)
+
+Rules:
+- Do NOT invent files, folders, env vars, endpoints, or triggers.
+- If something is not found, explicitly write: "Not found in this folder".
+- Start by scanning the folder tree under service/functions/Product/WebApp_Product_BackEnd
+  and list which subfolders will get a README, then create/update the READMEs.
+
+Output:
+- After changes, provide a summary table: folder → README created/updated → key files detected.
+
+
 # fetch catalog
 models = ChatGithub.list_models()
 print(f"GitHub currently hosts {len(models)} models.")
