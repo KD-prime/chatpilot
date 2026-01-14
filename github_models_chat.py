@@ -174,3 +174,103 @@ print("Assistant:", llm.invoke("Tell me a story"))
 models = ChatGithub.list_models()
 print(f"GitHub currently hosts {len(models)} models.")
 print("First five:", models[:5])
+
+@workspace
+
+Repo scope:
+service/functions/Product/WebApp_Product_BackEnd
+
+Context (must respect):
+This repo ALREADY has tests and structure like:
+- tests/test_main.py
+- tests/api/** (e.g., tests/api/auth/test_auth.py)
+- existing README.md files inside tests/**
+
+New Goal:
+In addition to documentation + traceability, CREATE NEW TEST SCRIPTS (.py) in the existing test structure under tests/, in the appropriate folders, and update/add README.md files where needed.
+
+Non-Negotiable Rules:
+- Do NOT move, rename, or delete any existing tests or folders.
+- Follow the existing test style in the repo (pytest markers, async patterns, TestClient/AsyncClient usage, patch/AsyncMock usage, fixtures).
+- Do NOT invent endpoints/routes. Only test routes/triggers that are discoverable in code (routers included, FastAPI app setup, route decorators, etc.).
+- Do NOT invent env vars/services. If a dependency is external, mock it (unless there is a local emulator already used in repo).
+- Use only files/modules that exist in the workspace.
+- If something cannot be confirmed from the repo, write “Not found in repo” in docs and do not create a fake test for it.
+
+Process (do in this order):
+1) Scan the WebApp_Product_BackEnd code to identify:
+   - FastAPI app creation and router includes
+   - route paths + HTTP methods (from code)
+   - core services modules (services/*)
+   - integrations modules (integrations/*)
+   - config/settings usage (config.py, settings, etc.)
+2) Scan existing tests to match conventions:
+   - how they create app/client
+   - how they patch/mocks async funcs
+   - how they structure fixtures
+   - naming conventions and folder placement
+3) Identify 5–10 high-value test gaps (missing coverage) based on code.
+4) Implement new tests to fill those gaps with minimal risk:
+   - prefer deterministic tests
+   - mock external calls
+   - test both success + failure paths
+
+Deliverables (must implement all):
+
+A) Create/Update testing docs + traceability (same as before)
+1) Update/create:
+   - tests/README.md
+   - TESTING.md
+   - TRACEABILITY.md
+2) Ensure docs reflect the REAL test structure and the NEW tests you add.
+
+B) Add NEW TEST FILES in the correct existing folders under tests/
+Guidelines:
+- API/endpoint tests go under tests/api/<module>/test_*.py
+- Non-API tests go under tests/<area>/test_*.py (only if that area already exists; otherwise create a minimal folder + README.md)
+- Keep tests small and focused.
+
+Minimum new tests to create (choose based on what exists in code):
+1) Health/Root behavior test (if route exists) OR startup/config sanity test
+   - If an endpoint exists in main/app, add to tests/test_main.py or a new test file beside it.
+2) Auth-related tests (expand beyond current) if auth routes/services exist:
+   - Add at least 2 additional cases not already covered:
+     - invalid payload validation
+     - missing/expired token behavior (only if implemented)
+     - refresh/logout edge cases
+3) One services-layer unit test file (no HTTP):
+   - Create tests/services/test_<service>.py for a service module that contains logic.
+   - Mock integrations.
+4) One integration wrapper test file (mocked):
+   - Create tests/integrations/test_<integration>.py validating error mapping, retries/timeouts if present.
+5) One negative/error-shape test:
+   - Ensure API returns consistent error response for a known failure path (only if defined in code).
+
+Important:
+- Do not write placeholder tests. Every test must actually import real modules and assert real behavior.
+- If the repo uses async routes/services, use pytest.mark.asyncio consistently.
+- If FastAPI app exists, prefer httpx.AsyncClient + ASGITransport if that’s already used (as seen in tests/test_main.py).
+- Reuse existing fixtures patterns rather than inventing new ones.
+
+C) Create/Update README.md inside each tests subfolder you touch
+For each tests subfolder where you add tests (e.g., tests/api/auth/, tests/services/, tests/integrations/):
+- Ensure there is a README.md describing:
+  - purpose of that test folder
+  - what files exist there (list real test files)
+  - what they cover (brief)
+  - how to run that subset (pytest -k / path-based) ONLY if pytest is confirmable; otherwise “Not found in repo” + “Proposed”
+
+D) Ensure tests are runnable
+- If pytest is configured in repo, ensure imports resolve and paths are correct.
+- If needed, add minimal conftest.py only if it improves reuse and matches repo style (do not over-engineer).
+- Do not change application code unless necessary for testability; if necessary, make minimal, safe changes and explain why.
+
+Output (must provide):
+1) A list of NEW files created (test .py + README.md) and UPDATED files.
+2) A “Current Test Inventory” table:
+   test path → type (unit/functional/api) → what it validates.
+3) Commands to run:
+   - all tests
+   - a single folder (e.g., tests/api/auth)
+   - a single test file
+   Only if pytest/tooling is confirmable from repo; otherwise mark commands as “Proposed”.
