@@ -174,3 +174,100 @@ print("Assistant:", llm.invoke("Tell me a story"))
 models = ChatGithub.list_models()
 print(f"GitHub currently hosts {len(models)} models.")
 print("First five:", models[:5])
+
+
+@workspace
+
+Create OR update the MASTER README.md at:
+service/functions/Product/WebApp_Product_BackEnd/README.md
+
+Intent:
+This is the “front door” documentation for the entire WebApp_Product_BackEnd. It must be high-quality, beginner-friendly, and accurate to what exists in the workspace.
+
+Core Rules (non-negotiable):
+- Do NOT invent: files, folders, endpoints/routes, triggers, env vars, services, cloud resources, or technologies.
+- Only describe what you can confirm from code/config/docs in the repo.
+- If something cannot be confirmed, write: “Not found in repo”.
+- Keep any existing useful content, but restructure and polish it into the template below (do not delete valuable info).
+
+Process (do this in order):
+1) Scan the folder tree under service/functions/Product/WebApp_Product_BackEnd
+2) Identify major modules/subsystems based on real directories and key files
+3) Read any existing README(s) and relevant config (pyproject.toml, requirements.txt, Dockerfile, host.json, function.json, yaml/yml, json) to infer how it runs
+4) Then write/update the master README
+
+Master README Template (must include all sections):
+
+# WebApp Product Backend
+
+## 1) What This Is
+Explain in plain English:
+- What the backend is responsible for
+- Typical consumers (e.g., UI, gateway, internal services) — keep generic unless the repo explicitly names them
+- What types of capabilities it provides (based on real modules found)
+
+## 2) How It’s Organized (Folder Map)
+- Provide a concise map of the major subfolders directly under WebApp_Product_BackEnd
+- For each subfolder:
+  - 1–2 sentence description (based on actual files)
+  - A link to that folder’s README.md (relative path)
+- If some folders don’t have code/config and are not important, briefly mention they exist but keep focus on main ones
+
+## 3) High-Level Architecture (ASCII Diagram Only)
+- Include a terminal-style ASCII diagram inside a Markdown code block (```).
+- Use box-style ASCII (+---+ and |   |) and arrows (--> or <-->).
+- Show a generic layered flow:
+  Client/UI --> Gateway/Edge --> Backend Modules/Services --> Data Stores/External Integrations
+- ONLY name specific components if the repo explicitly references them (in code/config/docs).
+- Ensure alignment is clean and readable (monospace spacing).
+- Include a small legend if helpful.
+
+## 4) Key Runtime Flows (Generic, Accurate)
+Describe 2–4 flows at a conceptual level without assuming route paths, e.g.:
+- “A client request enters the gateway, is validated, then forwarded to module X”
+- “A backend module calls an external integration, then stores results”
+If actual routes or triggers are explicitly present in code/config, you may include them, otherwise keep generic.
+
+## 5) Local Development
+Only include what can be confirmed from repo artifacts:
+- Prerequisites (runtime versions if specified)
+- Install dependencies
+- Run locally (how to start the service(s) / function host / app)
+- Testing and linting commands if present
+- How to validate it works (health check / sample request) ONLY if present in code/docs; otherwise provide a generic validation approach and label it as such
+
+## 6) Configuration and Environment Variables
+- Extract env vars ONLY from code/config (don’t guess).
+- Group them by category:
+  - Auth / Identity
+  - Data / Storage
+  - External Integrations
+  - Observability / Logging
+  - App Settings
+- For each env var, include:
+  - name
+  - what it controls (from usage context)
+  - where it is referenced (file path)
+If none are found, say “Not found in repo”.
+
+## 7) Deployment (High Level, Repo-Based)
+- Describe how it is deployed ONLY based on what the repo contains (infra folder, pipelines, scripts, platform hints).
+- Link to the relevant deployment files/docs (relative paths).
+- If unclear, say “Not found in repo” and list what would be needed to confirm.
+
+## 8) Where to Look Next
+- Provide a short “next links” list pointing to the most important subfolder READMEs and any onboarding docs.
+
+Quality Bar:
+- Write like an internal engineering README: clear headings, tight wording, no fluff.
+- Prefer bullet points and short paragraphs.
+- Use consistent terminology.
+- Avoid over-claiming. If uncertain, state it explicitly.
+
+Deliverables:
+- Update/create service/functions/Product/WebApp_Product_BackEnd/README.md
+- After writing, output a short summary:
+  - What sections were added/updated
+  - Which folders were linked
+  - Any “Not found in repo” gaps discovered
+
