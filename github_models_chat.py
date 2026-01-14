@@ -170,6 +170,139 @@ llm = ChatGithub(model="openai/gpt-4.1", temperature=0.3)
 # single non-streaming prompt
 print("Assistant:", llm.invoke("Tell me a story"))
 
+
+@workspace
+
+Repo scope:
+service/functions/Product/WebApp_Product_BackEnd
+
+Context:
+I have manually deleted EVERYTHING under:
+service/functions/Product/WebApp_Product_BackEnd/tests/
+So tests/ is empty (or will be empty). Recreate it cleanly.
+
+Goal:
+Rebuild a clean, canonical tests/ structure with:
+- 5 top-level test category folders (each with README.md)
+- tests/README.md index
+- tests/run_all_tests.py runnable via: python run_all_tests.py (when executed from tests/)
+- tests/requirements.txt + tests/dev_requirements.txt
+- Recreate essential tests based ONLY on real app code (no guessing)
+
+Canonical tests/ structure (MUST match exactly; do not add extra folders):
+tests/
+  README.md
+  run_all_tests.py
+  requirements.txt
+  dev_requirements.txt
+  unit_tests/
+    README.md
+  functional_tests/
+    README.md
+  integration_tests/
+    README.md
+  regression_tests/
+    README.md
+  performance_tests/
+    README.md
+
+Hard Rules:
+- Do NOT invent endpoints/routes/env vars/services. Only use what exists in workspace.
+- Only create test files for features you can prove exist by reading code.
+- If something cannot be confirmed, write “Not found in repo” in docs and skip test creation for it.
+- Prefer pytest if confirmed by repo dependencies/config/imports.
+- Do not require external services to be running; mock external calls unless local emulators already exist and are clearly configured in repo.
+
+Process (do in this order):
+1) Scan repo for testing stack & entrypoints:
+   - Look for: dev_requirements.txt, requirements*.txt, pyproject.toml
+   - Identify: pytest usage, httpx, fastapi, TestClient, ASGITransport
+2) Find how the FastAPI app is constructed:
+   - locate main.py (or equivalent) and app = FastAPI()
+   - identify included routers and their route prefixes + methods (from decorators)
+3) Identify core modules worth testing:
+   - services/*
+   - integrations/*
+   - config/settings usage
+   - any auth/security modules
+
+Deliverables:
+
+A) Create the canonical folder structure above exactly (no extras).
+- Create README.md in each of the 5 category folders with:
+  1) Purpose (novice-friendly)
+  2) What belongs here in this repo
+  3) Candidate coverage list (REAL modules paths only)
+  4) How to run (only if confirmed; otherwise “Proposed”)
+
+B) Create tests/README.md (index)
+Must include:
+- Overview
+- Folder guide (what each category is)
+- How to install deps:
+  pip install -r dev_requirements.txt
+- How to run all:
+  python run_all_tests.py
+- How to run subsets:
+  python run_all_tests.py --path unit_tests
+  python run_all_tests.py --path functional_tests --k "auth"
+- Notes on mocking + test conventions used in this repo (based on actual patterns found).
+
+C) Create tests/requirements.txt and tests/dev_requirements.txt
+Rules:
+- Prefer referencing repo-level files using -r ../<file> if those exist.
+- If no repo-level requirement file exists, infer deps ONLY from actual imports in app/tests stack.
+- Do not pin random versions unless pinned elsewhere in repo.
+- Ensure dev_requirements includes pytest and any libs needed to execute tests.
+
+D) Create tests/run_all_tests.py (must support “python run_all_tests.py”)
+Hard Requirements:
+- Must be runnable when current working dir is tests/:
+  python run_all_tests.py
+- Must run ALL tests under tests/ recursively.
+- Use pytest.main([...]) if pytest is present.
+- Add repo root to sys.path so imports resolve.
+- Provide clear output:
+  - repo root detected
+  - tests directory detected
+  - runner detected
+  - PASS/FAIL summary
+  - exit code
+  - list failed node IDs if available
+- Provide CLI flags:
+  --path <subpath>      (default: ".")
+  --k <expr>
+  --maxfail N (default 1)
+  --verbose / --quiet
+  --pdb / --lf
+  --capture {no,sys,fd} (default no)
+  --junitxml <file>
+- Exit codes: 0 pass, non-zero fail/error.
+- If pytest missing: print exact instruction to install via dev_requirements.txt then exit 2.
+
+E) Create initial test files (ONLY if confirmable from code)
+Create only the tests you can prove:
+1) A basic app health/root test IF a health/root endpoint exists.
+   - If not found, create a “startup/config import test” that ensures app imports successfully.
+2) One services-layer unit test for a service module containing pure logic (mock integrations).
+3) One integration-wrapper test (mocked) only if integrations modules exist.
+
+Place the tests in the appropriate category folders:
+- unit_tests/test_*.py
+- functional_tests/test_*.py
+- integration_tests/test_*.py
+(Do not create tests in regression_tests/ or performance_tests/ unless there is a clear basis in repo)
+
+Output:
+- Print the final tests/ tree you created.
+- Provide a summary table:
+  file created → why it exists → what it covers
+- Provide the exact commands that should work:
+  cd service/functions/Product/WebApp_Product_BackEnd/tests
+  pip install -r dev_requirements.txt
+  python run_all_tests.py
+
+
 # fetch catalog
 models = ChatGithub.list_models()
 print(f"GitHub currently hosts {len(models)} models.")
