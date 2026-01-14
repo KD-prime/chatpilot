@@ -174,3 +174,100 @@ print("Assistant:", llm.invoke("Tell me a story"))
 models = ChatGithub.list_models()
 print(f"GitHub currently hosts {len(models)} models.")
 print("First five:", models[:5])
+
+@workspace
+
+Repo scope:
+service/functions/Product/WebApp_Product_BackEnd
+
+Problem:
+The tests/ folder structure is messy/duplicated (e.g., performance/ vs performance_tests/, integrations/ vs integration_tests/, etc.).
+Fix it by consolidating into ONE canonical structure with exactly these category folders:
+
+tests/
+  api/                      (keep as-is)
+  unit_tests/
+  functional_tests/
+  integration_tests/
+  regression_tests/
+  performance_tests/
+  README.md
+  run_all_tests.py
+  requirements.txt
+  dev_requirements.txt
+
+Hard Rules:
+- Do NOT lose any existing test files or useful README content.
+- You MAY move/rename files/folders inside tests/ ONLY to consolidate into the canonical structure.
+- Do NOT invent tests/routes/endpoints/env vars.
+- After moving, update all README links/paths accordingly.
+- Delete duplicate/empty folders ONLY after their contents are migrated.
+- Keep git diff clean and easy to review.
+
+Tasks (do in this order):
+
+1) Inventory and classify
+- Print a tree of current tests/ (all folders + test_*.py + README.md).
+- Identify duplicates/conflicts:
+  - performance/ vs performance_tests/
+  - integrations/ vs integration_tests/
+  - any other duplicates
+
+2) Consolidate folders (canonicalize)
+- Ensure these canonical folders exist:
+  - tests/unit_tests/
+  - tests/functional_tests/
+  - tests/integration_tests/
+  - tests/regression_tests/
+  - tests/performance_tests/
+- Move files into the correct canonical folder:
+  - Anything under tests/performance/ -> move into tests/performance_tests/
+    Example: tests/performance/test_performance.py -> tests/performance_tests/test_performance.py
+  - Anything under tests/integrations/ -> move into tests/integration_tests/ (create a subfolder if needed)
+    Example:
+      tests/integrations/test_azure_cosmos_db.py -> tests/integration_tests/integrations/test_azure_cosmos_db.py
+      tests/integrations/test_azure_openai.py    -> tests/integration_tests/integrations/test_azure_openai.py
+
+- If tests/api/** are functional API tests, keep them in tests/api/** (do not move).
+  The category folder functional_tests/ should document that tests/api/** is where API tests live.
+
+3) Fix READMEs
+- Ensure tests/README.md exists and becomes the single index:
+  - “Current structure” section (tests/api/**, tests/test_main.py, etc.)
+  - “Category view” section linking to the 5 category READMEs
+  - “How to run”: cd tests && python run_all_tests.py
+- Ensure each canonical category folder has README.md:
+  - purpose
+  - what belongs here
+  - links to real tests (including tests/api/** if applicable)
+  - where new tests should go
+- If you moved any README.md from old folders, merge useful content into the canonical README.md (don’t discard).
+
+4) Remove duplicates safely
+- After migrations, remove ONLY folders that are now empty/duplicate, e.g.:
+  - tests/performance/ (if emptied)
+  - tests/integrations/ (if emptied)
+  - any accidental extra folders
+- Double-check no references remain to deleted paths.
+
+5) Verify run_all_tests.py behavior
+- Update tests/run_all_tests.py so it:
+  - runs ALL tests under tests/ recursively (including tests/api/** and new canonical folders)
+  - works from inside tests/: python run_all_tests.py
+  - prints clear PASS/FAIL, exit code, and failure nodeids
+  - supports --path for subsets (path is relative to tests/)
+
+6) Final output
+- Print a final “Before vs After” tests/ tree.
+- Provide a summary table:
+  file moved from → moved to
+- Confirm command:
+  cd service/functions/Product/WebApp_Product_BackEnd/tests
+  python run_all_tests.py
+  works.
+
+Important:
+Do NOT create new folders beyond the canonical set above.
+Do NOT leave both performance/ and performance_tests/ (only keep performance_tests/).
+Do NOT leave both integrations/ and integration_tests/ (only keep integration_tests/).
+
