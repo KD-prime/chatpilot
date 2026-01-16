@@ -175,3 +175,122 @@ print("Assistant:", llm.invoke("Tell me a story"))
 models = ChatGithub.list_models()
 print(f"GitHub currently hosts {len(models)} models.")
 print("First five:", models[:5])
+
+
+
+@workspace
+
+Repo scope:
+service/functions/Product/WebApp_Product_BackEnd
+
+Goal:
+Create what is MISSING for “#12 Traceability: Functional-to-Technical Requirement Mapping & Test Coverage”:
+1) Create/Update traceability documentation so it fully meets #12 requirements
+2) Add ONLY the missing tests (unit / integration / performance) that can be implemented
+   using REAL code/routes/modules in this repo, with NO guessing.
+
+IMPORTANT:
+Do NOT reference any images. The requirements are written below.
+
+========================
+#12 Traceability Requirements (must be satisfied after your changes)
+
+A) Create/Update:
+service/functions/Product/WebApp_Product_BackEnd/TRACEABILITY.md
+
+TRACEABILITY.md must include a Markdown table with EXACT columns:
+| Functional Requirement | Technical Requirement (with source file paths) | Unit Test(s) | Integration Test(s) | Performance Test(s) | Notes / Gaps |
+
+Rules:
+- Functional Requirement must be sourced from docs OR written as:
+  “Inferred from code (confirm with PO/BA)” and cite the source file paths.
+- Technical Requirement must cite real file paths (routes/services/integrations/config).
+- Tests must cite real test file paths that exist.
+- If a test type does not exist, write exactly: “Not found in repo”.
+- Notes/Gaps must recommend where to add tests (path suggestion) when missing.
+
+B) Also ensure these exist and are updated (do not delete useful content):
+- service/functions/Product/WebApp_Product_BackEnd/TESTING.md
+- service/functions/Product/WebApp_Product_BackEnd/tests/README.md
+- service/functions/Product/WebApp_Product_BackEnd/README.md
+  Add a “Traceability & Test Coverage” section linking to TRACEABILITY.md, TESTING.md, tests/README.md.
+
+========================
+Functional + Technical Requirements to map (ONLY if code exists; else “Not found in repo”)
+
+Functional Requirements:
+1) RAG — Ability to retrieve relevant documents and generate grounded responses for user queries.
+2) GraphRAG — Ability to traverse knowledge graphs and retrieve connected entities for context-rich generation.
+3) SAM — ONLY if code exists in repo; otherwise “Not found in repo”.
+
+Technical Requirements:
+1) Vector-based similarity search + LLM prompt orchestration for factual/grounded generation.
+2) Graph traversal algorithms + entity linking + hybrid retrieval combining graph + embeddings.
+3) SAM — ONLY if code exists; otherwise “Not found in repo”.
+
+========================
+Test Requirements to implement IF missing and IF confirmable from code
+
+Unit Tests:
+U1) Validate embedding generation.
+U2) Validate vector store indexing and retrieval precision for sample queries.
+U3) Validate graph node/edge creation.
+U4) Validate graph traversal logic and entity extraction accuracy.
+
+Integration Tests:
+I1) End-to-end flow: query → retrieval → LLM generation → response formatting.
+I2) Combined flow: graph traversal + vector retrieval → context building → generation.
+
+Performance Tests:
+P1) Measure latency/throughput for high-volume queries (verify against SLO only if SLO exists in repo; otherwise record metrics).
+P2) Stress test graph traversal: large graphs and nested retrieval scenarios for scalability.
+
+========================
+Non-Negotiable Rules for adding tests
+- Do NOT invent endpoints/routes, env vars, services, models, vector DBs, or graph DBs.
+- Only test what is discoverable in code (real modules, routers, functions, classes).
+- If a dependency is external (Azure OpenAI, Cosmos DB, etc.), mock it unless an emulator is already used in repo.
+- Follow existing test style and tooling used in this repo:
+  (pytest markers, async patterns, httpx AsyncClient + ASGITransport, TestClient usage, patch/AsyncMock usage, fixtures style).
+- Do NOT move/rename/delete existing tests or folders.
+- Every new test must import real modules and assert real behavior.
+- If a requirement cannot be implemented because code isn’t present, do NOT create placeholder tests.
+  Instead: document it as “Not found in repo”.
+
+========================
+Where to put new tests (use existing repo structure)
+- If repo already uses tests/api/** for API tests, keep API tests there.
+- If repo already has tests/integrations/** for integration wrappers, add integration wrapper tests there.
+- If repo has tests/performance_tests/** or similar, add performance tests there; otherwise create tests/performance_tests/ + README.md.
+- If repo has tests/unit_tests/** or similar, add unit tests there; otherwise create tests/unit_tests/ + README.md.
+- Do NOT restructure existing tests; add minimal new folders only if needed.
+
+========================
+Process (must do in this order)
+1) Re-scan the repo (code + tests + docs) and produce a “Missing Coverage List” for:
+   U1–U4, I1–I2, P1–P2, plus missing traceability docs sections.
+2) For each missing item, decide if it is implementable from repo code.
+   - If implementable: create the test(s) with minimal mocking and deterministic assertions.
+   - If not implementable: do NOT create tests; document “Not found in repo” in TRACEABILITY.md.
+3) Create/Update:
+   - TRACEABILITY.md (complete mapping)
+   - TESTING.md (how to run tests + categories present in THIS repo)
+   - tests/README.md (current structure + how to add tests)
+   - README.md (links section)
+
+4) Add only necessary README.md files in any NEW test folders you create.
+   NO EMPTY READMEs.
+
+========================
+Output required (must include)
+1) List of files created/updated (new tests + docs) with 1–3 bullets each.
+2) “Current Test Inventory” table:
+   test path → category (unit/integration/performance/api/functional) → what it validates (1 line)
+3) A “Coverage Map” summary:
+   U1..U4, I1..I2, P1..P2 → Covered/Not covered/Not found in repo + test paths
+4) Commands to run tests (only if confirmable from repo; else label “Proposed”)
+   - run all
+   - run unit subset
+   - run integration subset
+   - run performance subset
+
