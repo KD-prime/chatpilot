@@ -175,3 +175,153 @@ print("Assistant:", llm.invoke("Tell me a story"))
 models = ChatGithub.list_models()
 print(f"GitHub currently hosts {len(models)} models.")
 print("First five:", models[:5])
+
+
+@workspace
+
+Repo scope (Frontend):
+service/functions/Product/WebApp_Product_FrontEnd
+
+Goal:
+Repeat the SAME enterprise-grade approach we used for backend, but for the FRONTEND:
+- category-first test structure (no random “tests/api” style top-level folders)
+- filled READMEs (no blanks)
+- run-all script runnable via: python run_all_tests.py (executed from the tests/ folder)
+- scan the whole frontend codebase to identify missing high-value tests (based on real code)
+
+Canonical structure (ONLY these top-level folders under the frontend tests directory):
+service/functions/Product/WebApp_Product_FrontEnd/tests/
+  README.md
+  run_all_tests.py
+  requirements.txt
+  dev_requirements.txt
+  unit_tests/
+  functional_tests/
+  integration_tests/
+  regression_tests/
+  performance_tests/
+
+Inside category folders you may create subfolders like:
+- tests/unit_tests/components/
+- tests/unit_tests/utils/
+- tests/functional_tests/pages/
+- tests/functional_tests/routes/
+- tests/integration_tests/api_clients/
+But do NOT create extra top-level test folders.
+
+Hard Rules:
+- Do NOT invent routes, endpoints, env vars, features, components, or services.
+- Only reference what exists in the workspace (code/config).
+- If something cannot be confirmed, write exactly: “Not found in repo”.
+- NO EMPTY README.md files (must contain useful content even if folder is empty).
+- Do NOT break existing frontend build or test setup.
+- Detect the actual test runner(s) used from package.json (vitest/jest/cypress/playwright/etc.).
+  Do NOT assume tools that aren’t present.
+- You MAY move/rename tests within the frontend tests/ folder ONLY if needed to enforce canonical structure,
+  but do NOT delete test content; merge useful README content if moving.
+
+Process (must follow in order):
+1) Scan the frontend repo to detect:
+   - framework/tooling (React/Vite/etc.)
+   - routing approach (react-router, etc.)
+   - key pages/screens/components (real file paths)
+   - API client modules/hooks/services (real paths)
+   - env/config usage (e.g., import.meta.env)
+   - testing tools from package.json scripts + devDependencies
+Create:
+- service/functions/Product/WebApp_Product_FrontEnd/TEST_SURFACE_MAP_FRONTEND.md
+Include tables:
+- Screens/pages and their source file paths
+- Reusable components and their paths
+- API client/service modules and their paths
+- Config/env keys referenced (ONLY if explicitly referenced in code)
+
+2) Scan existing tests (if any exist) and record conventions:
+- how tests are written
+- how mocking is done (msw? vi.mock? jest.mock?)
+Create:
+- service/functions/Product/WebApp_Product_FrontEnd/TEST_GAP_REPORT_FRONTEND.md
+Include a “Current Test Inventory” table:
+test file | category | what it validates | source modules
+
+3) Create/Update canonical tests/ structure
+- Ensure category folders exist:
+  unit_tests/, functional_tests/, integration_tests/, regression_tests/, performance_tests/
+- Create/update README.md in each folder (no blanks).
+Each category README must include:
+  Purpose, What belongs here in THIS repo, What exists now (list real tests),
+  How to run subset (only if confirmable; else “Proposed”), Where to add new tests.
+
+4) Create/Update tests/README.md (index)
+Must include:
+- Overview + category-first policy
+- Structure diagram (simple ASCII)
+- How to install deps (based on detected package manager)
+- How to run all tests using: python run_all_tests.py
+- How to run subsets using run_all_tests.py --path ...
+- Conventions in this repo (naming, where tests go, mocking strategy) based on real code/tests.
+
+5) Create tests/run_all_tests.py (python wrapper that runs JS tests)
+Create:
+service/functions/Product/WebApp_Product_FrontEnd/tests/run_all_tests.py
+
+Hard Requirements:
+- Running from the tests directory MUST work:
+  cd service/functions/Product/WebApp_Product_FrontEnd/tests
+  python run_all_tests.py
+
+- Detect package manager via lockfile:
+  pnpm-lock.yaml -> pnpm
+  yarn.lock -> yarn
+  package-lock.json -> npm
+  If none found, default to npm but print a warning.
+
+- Detect test command from package.json scripts in this priority:
+  1) test
+  2) test:ci
+  3) test:unit
+  4) vitest / jest / playwright / cypress scripts if present
+If none exist, print “Not found in repo” and exit 2 (do NOT invent tooling).
+
+- Support CLI flags (argparse):
+  --path <subpath>   (run subset if runner supports path filtering; if not supported, print message and run full suite)
+  --watch            (only if supported)
+  --ci               (use CI-friendly script if available)
+  --verbose
+
+- Debug-friendly output:
+  - frontend root detected
+  - package manager detected
+  - chosen test script/command
+  - PASS/FAIL + exit code
+
+6) Create tests/requirements.txt and tests/dev_requirements.txt (documentation only)
+Rules:
+- Do NOT pin JS deps here.
+- These files should be setup guidance and reference package.json/lockfile as source of truth.
+requirements.txt should include:
+- node version info ONLY if repo specifies it (e.g., .nvmrc, engines)
+dev_requirements.txt should include:
+- install command for detected package manager
+- test command(s) detected
+If not confirmable, write “Not found in repo”.
+
+7) Identify and implement missing high-value tests (only confirmable)
+- Add 5–10 high-value tests maximum using the repo’s actual runner and libraries.
+- Prioritize:
+  - critical UI components rendering and validation
+  - error/empty states
+  - routing/guard logic (if present)
+  - API client/hooks behavior with network mocked using existing approach
+- Place new tests under the correct category folder.
+
+Output (must provide):
+1) Final frontend tests/ tree
+2) Summary table: created/updated/moved files
+3) Current Test Inventory table
+4) Top 10 test gaps (from TEST_GAP_REPORT_FRONTEND.md)
+5) Commands:
+   cd service/functions/Product/WebApp_Product_FrontEnd/tests
+   python run_all_tests.py
+   python run_all_tests.py --path unit_tests
+   python run_all_tests.py --path functional_tests
